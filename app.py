@@ -1,5 +1,4 @@
-
-
+from bs4 import BeautifulSoup
 from pymongo import MongoClient
 import jwt
 import datetime
@@ -7,7 +6,6 @@ import hashlib
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -18,7 +16,6 @@ SECRET_KEY = 'SPARTA'
 from pymongo import MongoClient
 client = MongoClient('mongodb+srv://test:sparta@cluster0.9cihgwo.mongodb.net/Cluster0?retryWrites=true&w=majority')
 db = client.dbsparta
-
 
 @app.route('/')
 def home():
@@ -32,6 +29,79 @@ def home():
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
+#--------------------메인페이지---------------
+@app.route('/main')
+def main():
+    return render_template('main.html')
+
+@app.route('/book/detail')
+def book_detail():
+    return render_template('book_detail.html')
+
+# -------------------독후감-------------------
+
+@app.route('/bookreport')
+def review():
+    return render_template('bookreport.html')
+@app.route("/book", methods=["POST"])
+def book_post():
+    url_receive = request.form['url_give']
+    star_receive = request.form['star_give']
+    comment_receive = request.form['comment_give']
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
+    import requests
+    data = requests.get(url_receive, headers=headers)
+    soup = BeautifulSoup(data.text, 'html.parser')
+    og_image = soup.select_one('meta[property="og:image"]')
+    og_title = soup.select_one('meta[property="og:title"]')
+    og_description = soup.select_one('meta[property="og:description"]')
+    image = og_image['content']
+    title = og_title['content']
+    description = og_description['content']
+    books_list = list(db.books.find({}, {'_id': False}))
+    count = len(books_list) + 1
+    print(count)
+    doc = {
+        'num': count,
+        'image':image,
+        'title':title,
+        'desc':description,
+        'star':star_receive,
+        'comment':comment_receive
+    }
+    db.books.insert_one(doc)
+    return jsonify({'msg':'POST 연결 완료!'})
+@app.route("/book", methods=["GET"])
+def book_get():
+    book_list = list(db.books.find({}, {'_id': False}))
+    return jsonify({'books':book_list})
+
+@app.route("/open/edit", methods=["GET"])
+def edit_get():
+    num_receive = request.args.get('num_give')
+    books_list = list(db.books.find({'num': int(num_receive)}, {'_id': False}))
+    return jsonify({'books': books_list})
+
+@app.route("/save/edit", methods=["POST"])
+def edit_post():
+    num_receive = request.form['num_give']
+    url_receive = request.form['url_give']
+    star_receive = request.form['star_give']
+    comment_receive = request.form['comment_give']
+    db.books.update_one({'num': int(num_receive)},
+                              {'$set': {'url': url_receive, 'star': star_receive, 'comment': comment_receive}})
+    return jsonify({'msg': '수정 완료!'})
+
+@app.route("/delete", methods=["POST"])
+def delete_post():
+    num_receive = request.form['num_give'];
+    db.books.delete_one({'num': int(num_receive)})
+    print(num_receive)  # num값이 들어오는것을 확인
+    return jsonify({'msg': '삭제 완료!'})
+
+
+# ------------------로그인-------------------
 
 @app.route('/login')
 def login():
@@ -75,6 +145,16 @@ def sign_in():
     else:
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
 
+@app.route('/logout', methods=['POST'])
+def logout():
+    remove_token = request.cookies.get('mytoken')
+    from dns.message import make_response
+    response = make_response(redirect(url_for('/')))
+    response.set_cookie('mytoken', remove_token, expires=0)
+    return response
+
+
+
 
 @app.route('/sign_up/save', methods=['POST'])
 def sign_up():
@@ -86,7 +166,7 @@ def sign_up():
         "password": password_hash,                                  # 비밀번호
         "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
         "profile_pic": "",                                          # 프로필 사진 파일 이름
-        "profile_pic_real": "profile_pics/profile_pics.png", # 프로필 사진 기본 이미지
+        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
         "profile_info": ""                                          # 프로필 한 마디
     }
     db.users.insert_one(doc)
@@ -168,7 +248,6 @@ def get_posts():
         return jsonify({"result": "success", "msg": "포스팅을 가져왔습니다.", "posts": posts})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
-
 
 @app.route('/update_like', methods=['POST'])
 def update_like():

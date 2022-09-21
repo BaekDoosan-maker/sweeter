@@ -118,13 +118,12 @@ function get_posts() {
                                                 </div>
                                                 <nav class="level is-mobile">
                                                     <div class="level-left">
-                                                        <a class="level-item is-sparta" aria-label="heart" onclick="toggle_like('${post['_id']}', 'heart')">
+                                                        <a class="level-item is-sane" aria-label="heart" onclick="toggle_like('${post['_id']}', 'heart')">
                                                             <span class="icon is-small"><i class="fa ${class_heart}"
                                                                                            aria-hidden="true"></i></span>&nbsp;<span class="like-num">${num2str(count_heart)}</span>
                                        <!-- 지금은 fa-heart가 그냥 나오게 되어있다. 이부분은 동적으로 fa-heart-o인지 아니면 fa-heart인지를 확인해야함 -->
                                                         </a>
                                                     </div>
-
                                                 </nav>
                                             </div>
                                         </article>

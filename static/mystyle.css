@@ -1,5 +1,5 @@
 body {
-    background-color: RGBA(232, 52, 78, 0.2);
+    background-color: #ADD8E6;
     min-height: 100vh;
     padding-top: 3.25rem;
 }
@@ -10,20 +10,23 @@ body {
     margin: auto;
 }
 
-.is-sparta {
-    color: #e8344e !important;
+.is-sane {
+    color: #87CEFA !important;
 }
 
-.button.is-sparta {
-    background-color: #e8344e;
+.hero-body has-text-centered{
+    background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("bookjuk.png") !important;
+}
+.button.is-sane {
+    background-color: #00BFFF;
     border-color: transparent;
-    color: #fff !important;
+    color: blue !important;
 }
 
-.button.is-sparta.is-outlined {
+.button.is-sane.is-outlined {
     background-color: transparent;
-    border-color: #e8344e;
-    color: #e8344e !important;
+    border-color: #008B8B;
+    color: #00FFFF !important;
 }
 
 .modal-content {
